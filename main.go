@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
+	"strings"
 	"sync/atomic"
 )
 
@@ -22,6 +24,10 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
 	mux.HandleFunc("POST /api/validate_chirp", apiCfg.validateChirpHandler)
 	server.ListenAndServe()
+}
+
+type Chirp struct {
+	Content string `json:"body"`
 }
 
 func readinessHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,41 +62,46 @@ func (cfg *apiConfig) resetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Content string `json:"body"`
-	}
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
+	c := Chirp{}
+	err := decoder.Decode(&c)
 	if err != nil {
 		log.Printf("Error decoding parameters: %s", err)
 		w.WriteHeader(500)
 		return
 	}
-	log.Printf("Received content: '%s', length: %d", params.Content, len(params.Content))
-	if len(params.Content) > 140 {
-		type errorResponse struct {
-			Error string `json:"error"`
-		}
-		lengthErr := errorResponse{
-			Error: "Chirp is too long",
-		}
-		dat, err := json.Marshal(lengthErr)
-		if err != nil {
-			log.Printf("Error marshalling JSON: %s", err)
-			w.WriteHeader(500)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		w.Write(dat)
+	if len(c.Content) > 140 {
+		respondWithError(w, "Chirp is too long")
 		return
 	}
+	c.replaceBadWords()
+	respondWithJSON(w, c)
+}
+
+func respondWithError(w http.ResponseWriter, errMsg string) {
+	type errorResponse struct {
+		Error string `json:"error"`
+	}
+	lengthErr := errorResponse{
+		Error: errMsg,
+	}
+	dat, err := json.Marshal(lengthErr)
+	if err != nil {
+		log.Printf("Error marshalling JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	w.Write(dat)
+}
+
+func respondWithJSON(w http.ResponseWriter, c Chirp) {
 	type responseBody struct {
-		Valid bool `json:"valid"`
+		CleanedContent string `json:"cleaned_body"`
 	}
 	okRespBody := responseBody{
-		Valid: true,
+		CleanedContent: c.Content,
 	}
 	dat, err := json.Marshal(okRespBody)
 	if err != nil {
@@ -101,4 +112,15 @@ func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	w.Write(dat)
+}
+
+func (c *Chirp) replaceBadWords() {
+	badWords := []string{"sharbert", "fornax", "kerfuffle"}
+	words := strings.Split(c.Content, " ")
+	for i, w := range words {
+		if slices.Contains(badWords, strings.ToLower(w)) {
+			words[i] = "****"
+		}
+	}
+	c.Content = strings.Join(words, " ")
 }
