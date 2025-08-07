@@ -58,5 +58,7 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", apiCfg.listChirpsHandler)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.getChirpsHandler)
 	mux.HandleFunc("POST /api/login", apiCfg.loginHandler)
+	mux.HandleFunc("POST /api/refresh", apiCfg.getRefreshTokensHandler)
+	mux.HandleFunc("POST /api/revoke", apiCfg.revokeRefreshTokensHandler)
 	log.Fatal(server.ListenAndServe())
 }
