@@ -16,10 +16,19 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func main() {
 	godotenv.Load()
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
+	}
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
@@ -28,14 +37,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening postgres connection: %v", err)
 	}
+	apiCfg := apiConfig{
+		fileserverHits: atomic.Int32{},
+		db:             database.New(db),
+		platform:       platform,
+		jwtSecret:      jwtSecret,
+	}
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
-	apiCfg := apiConfig{}
-	apiCfg.db = database.New(db)
-	apiCfg.platform = os.Getenv("PLATFORM")
 	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(appHandler))
 	mux.HandleFunc("GET /api/healthz", readinessHandler)

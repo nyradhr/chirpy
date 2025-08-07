@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -77,5 +78,53 @@ func TestJWTWrongSecret(t *testing.T) {
 	_, err = ValidateJWT(token, wrongSecret)
 	if err == nil {
 		t.Fatal("Expected error for wrong secret, got nil")
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	headers := http.Header{
+		"Authorization": []string{"Bearer TEST123"},
+	}
+	token, err := GetBearerToken(headers)
+	if err != nil {
+		t.Fatalf("Failed to acquire bearer token: %v", err)
+	}
+	if token != "TEST123" {
+		t.Fatalf("Expected token 'TEST123', got '%s'", token)
+	}
+	noWhitespace := http.Header{
+		"Authorization": []string{"BearerTest123"},
+	}
+	_, err = GetBearerToken(noWhitespace)
+	if err == nil {
+		t.Fatal("Expected error for malformed authorization header (missing whitespace), got nil")
+	}
+	noBearer := http.Header{
+		"Authorization": []string{"Hello TEST123"},
+	}
+	_, err = GetBearerToken(noBearer)
+	if err == nil {
+		t.Fatal("Expected error for malformed authorization header (missing prefix 'Bearer'), got nil")
+	}
+	noToken := http.Header{
+		"Authorization": []string{"Bearer "},
+	}
+	_, err = GetBearerToken(noToken)
+	if err == nil {
+		t.Fatal("Expected error for malformed authorization header (missing token), got nil")
+	}
+	extraWhitespace := http.Header{
+		"Authorization": []string{" Bearer  TEST123  "},
+	}
+	_, err = GetBearerToken(extraWhitespace)
+	if err != nil {
+		t.Fatalf("Failed to acquire token: %v", err)
+	}
+	missingAuth := http.Header{
+		"Other": []string{"test123"},
+	}
+	_, err = GetBearerToken(missingAuth)
+	if err == nil {
+		t.Fatal("Expected error for missing authorization header, got nil")
 	}
 }
