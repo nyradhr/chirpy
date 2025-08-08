@@ -50,7 +50,7 @@ func (cfg *apiConfig) updateUsersHandler(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusNotFound, "User not found", err)
 		return
 	}
-	response := UserResponse{
+	response := User{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,

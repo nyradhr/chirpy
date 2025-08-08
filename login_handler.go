@@ -58,20 +58,20 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error saving refresh token to db", err)
 		return
 	}
-	type UserResponse struct {
+	response := struct {
 		ID           uuid.UUID `json:"id"`
 		CreatedAt    time.Time `json:"created_at"`
 		UpdatedAt    time.Time `json:"updated_at"`
 		Email        string    `json:"email"`
 		AccessToken  string    `json:"token"`
 		RefreshToken string    `json:"refresh_token"`
-	}
-	respondWithJSON(w, http.StatusOK, UserResponse{
+	}{
 		ID:           user.ID,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 		Email:        user.Email,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-	})
+	}
+	respondWithJSON(w, http.StatusOK, response)
 }
