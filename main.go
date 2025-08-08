@@ -61,5 +61,6 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.getRefreshTokensHandler)
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeRefreshTokensHandler)
 	mux.HandleFunc("PUT /api/users", apiCfg.updateUsersHandler)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.deleteChirpsHandler)
 	log.Fatal(server.ListenAndServe())
 }
