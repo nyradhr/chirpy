@@ -22,7 +22,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error decoding parameters", err)
 		return
 	}
-	u, err := cfg.db.GetUser(r.Context(), l.Email)
+	u, err := cfg.db.GetUserByEmail(r.Context(), l.Email)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", err)
 		return
