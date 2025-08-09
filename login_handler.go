@@ -33,6 +33,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:      u.UpdatedAt,
 		Email:          u.Email,
 		HashedPassword: u.HashedPassword,
+		IsChirpyRed:    u.IsChirpyRed,
 	}
 	err = auth.CheckPasswordHash(l.Password, user.HashedPassword)
 	if err != nil {
@@ -65,6 +66,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		Email        string    `json:"email"`
 		AccessToken  string    `json:"token"`
 		RefreshToken string    `json:"refresh_token"`
+		IsChirpyRed  bool      `json:"is_chirpy_red"`
 	}{
 		ID:           user.ID,
 		CreatedAt:    user.CreatedAt,
@@ -72,6 +74,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		Email:        user.Email,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		IsChirpyRed:  user.IsChirpyRed,
 	}
 	respondWithJSON(w, http.StatusOK, response)
 }

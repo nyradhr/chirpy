@@ -62,5 +62,6 @@ func main() {
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeRefreshTokensHandler)
 	mux.HandleFunc("PUT /api/users", apiCfg.updateUsersHandler)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.deleteChirpsHandler)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.upgradeUsersHandler)
 	log.Fatal(server.ListenAndServe())
 }

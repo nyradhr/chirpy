@@ -42,7 +42,7 @@ func (cfg *apiConfig) updateUsersHandler(w http.ResponseWriter, r *http.Request)
 	}
 	err = cfg.db.UpdateUser(r.Context(), params)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error updating user", err)
+		respondWithError(w, http.StatusNotFound, "User not found", err)
 		return
 	}
 	user, err := cfg.db.GetUser(r.Context(), userID)
@@ -51,10 +51,11 @@ func (cfg *apiConfig) updateUsersHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response := User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email:     user.Email,
+		ID:          user.ID,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 	respondWithJSON(w, http.StatusOK, response)
 }
