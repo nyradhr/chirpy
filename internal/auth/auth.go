@@ -61,7 +61,7 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return userID, nil
 }
 
-func GetBearerToken(headers http.Header) (string, error) {
+func getAuthHeader(headers http.Header, prefix string) (string, error) {
 	auth := headers.Get("Authorization")
 	if auth == "" {
 		return "", errors.New("authorization header not found")
@@ -73,11 +73,14 @@ func GetBearerToken(headers http.Header) (string, error) {
 	if len(parts) != 2 {
 		return "", errors.New("malformed authorization header")
 	}
-	if parts[0] != "Bearer" {
+	if parts[0] != prefix {
 		return "", errors.New("wrong authorization header prefix")
 	}
-	token := parts[1]
-	return token, nil
+	return parts[1], nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	return getAuthHeader(headers, "Bearer")
 }
 
 func MakeRefreshToken() (string, error) {
@@ -88,4 +91,8 @@ func MakeRefreshToken() (string, error) {
 	}
 	refreshToken := hex.EncodeToString(random)
 	return refreshToken, nil
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	return getAuthHeader(headers, "ApiKey")
 }
